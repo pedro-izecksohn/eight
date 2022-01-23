@@ -1,3 +1,6 @@
+// eight.c - A puzzle.
+// Version: 2022-Jan-23 16:41
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,8 +17,8 @@ void print (char * array)
 
 bool is_perfect (char *array)
 {
-  const char perfect [] = {'1', '2', '3', '4', '5', '6', '7', '8', '_'};
-  return (0==memcmp (array, perfect, 9));
+  const char * perfect = "12345678_";
+  return (0==strcmp (array, perfect));
 }
 
 typedef struct Point
@@ -63,7 +66,7 @@ int main (int argc, char **argv)
   {
     niters = atoi (argv[1]);
   }
-  char array [] = {'1', '2', '3', '4', '5', '6', '7', '8', '_'};
+  char array [] = {'1', '2', '3', '4', '5', '6', '7', '8', '_', 0};
   Point cursor = {2, 2};
   printf ("The following is the target:\n");
   print (array);
