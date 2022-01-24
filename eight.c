@@ -26,36 +26,118 @@ typedef struct Point
   int x, y;
 } Point;
 
-void up (char *array, Point *cursor)
+int count_char (char *array, char c)
 {
-  if (cursor->y<1) return;
-  array[cursor->x+cursor->y*3] = array[cursor->x+(cursor->y-1)*3];
-  array[cursor->x+(cursor->y-1)*3] = '_';
-  cursor->y--;
+  int ret = 0;
+
+  while (*array!=0)
+  {
+    if (*array==c)
+    {
+      ret++;
+    }
+    array++;
+  }
+  return ret;
 }
 
-void down (char *array, Point *cursor)
+bool is_array_valid (char *array)
 {
-  if (cursor->y>1) return;
-  array[cursor->x+cursor->y*3] = array[cursor->x+(cursor->y+1)*3];
-  array[cursor->x+(cursor->y+1)*3] = '_';
-  cursor->y++;
+  if (strlen(array) != 9)
+  {
+    return false;
+  }
+  char c = '1';
+  while (c<'9')
+  {
+    if (count_char (array, c) != 1)
+    {
+      return false;
+    }
+    c++;
+  }
+  if (count_char (array, '_') != 1)
+  {
+    return false;
+  }
+  return true;
 }
 
-void left (char *array, Point *cursor)
+Point get_cursor (char * const array)
 {
-  if (cursor->x<1) return;
-  array[cursor->x+cursor->y*3] = array[(cursor->x-1)+cursor->y*3];
-  array[(cursor->x-1)+cursor->y*3] = '_';
-  cursor->x--;
+  Point cursor;
+  const int icursor = index (array, '_')- array;
+  cursor.y = icursor/3;
+  cursor.x = icursor%3;
+  return cursor;
 }
 
-void right (char *array, Point *cursor)
+bool move_digit (char * const array, const char digit)
 {
-  if (cursor->x>1) return;
-  array[cursor->x+cursor->y*3] = array[(cursor->x+1)+cursor->y*3];
-  array[(cursor->x+1)+cursor->y*3] = '_';
-  cursor->x++;
+  if ((digit<'1')||(digit>'8'))
+  {
+    return false;
+  }
+  const Point cursor = get_cursor (array);
+  const int icursor = (cursor.y*3)+cursor.x;
+  Point point_digit;
+  const int idigit = index (array, digit) - array;
+  point_digit.y = idigit/3;
+  point_digit.x = idigit%3;
+  //printf ("point_digit.x = %d\tpoint_digit.y = %d\n", point_digit.x, point_digit.y);
+  if (point_digit.y == cursor.y)
+  {
+    if ( (point_digit.x == (cursor.x+1)) || (point_digit.x == (cursor.x-1)) )
+    {
+      array[idigit] = '_';
+      array[icursor] = digit;
+      return true;
+    }
+    return false;
+  }
+  if (point_digit.x == cursor.x)
+  {
+    if ( (point_digit.y == (cursor.y+1)) || (point_digit.y == (cursor.y-1)) )
+    {
+      array[idigit] = '_';
+      array[icursor] = digit;
+      return true;
+    }
+    return false;
+  }
+  return false;
+}
+
+void up (char *array)
+{
+  Point cursor = get_cursor (array);
+  if (cursor.y<1) return;
+  array[cursor.x+(cursor.y*3)] = array[cursor.x+((cursor.y-1)*3)];
+  array[cursor.x+((cursor.y-1)*3)] = '_';
+}
+
+void down (char *array)
+{
+  Point cursor = get_cursor (array);
+  if (cursor.y>1) return;
+  array[cursor.x+(cursor.y*3)] = array[cursor.x+((cursor.y+1)*3)];
+  array[cursor.x+((cursor.y+1)*3)] = '_';
+}
+
+void left (char *array)
+{
+  Point cursor = get_cursor (array);
+  if (cursor.x<1) return;
+  array[cursor.x+(cursor.y*3)] = array[(cursor.x-1)+(cursor.y*3)];
+  array[(cursor.x-1)+(cursor.y*3)] = '_';
+}
+
+void right (char *array)
+{
+  Point cursor = get_cursor (array);
+  if (cursor.x>1) return;
+  array[cursor.x+(cursor.y*3)] = array[(cursor.x+1)+(cursor.y*3)];
+  array[(cursor.x+1)+(cursor.y*3)] = '_';
 }
 
 int main (int argc, char **argv)
@@ -67,7 +149,6 @@ int main (int argc, char **argv)
     niters = atoi (argv[1]);
   }
   char array [] = {'1', '2', '3', '4', '5', '6', '7', '8', '_', 0};
-  Point cursor = {2, 2};
   printf ("The following is the target:\n");
   print (array);
   unsigned int i = 0;
@@ -76,19 +157,19 @@ int main (int argc, char **argv)
     int j = rand()%4;
     if (j==0)
     {
-      up (array, &cursor);
+      up (array);
     }
     else if (j==1)
     {
-      down (array, &cursor);
+      down (array);
     }
     else if (j==2)
     {
-      left (array, &cursor);
+      left (array);
     }
     else if (j==3)
     {
-      right (array, &cursor);
+      right (array);
     }
     i++;
   }
@@ -96,27 +177,35 @@ int main (int argc, char **argv)
   print (array);
   while (!is_perfect(array))
   {
-    printf ("Enter one of u d l r to move the cursor: ");
+    if (false == is_array_valid (array))
+    {
+      fprintf (stderr, "Error: The array is invalid.\n");
+      return EXIT_FAILURE;
+    }
+    printf ("Enter one of u d l r to move the cursor\nor the digit you want to move: ");
     char c = getchar();
     if (c=='u')
     {
-      up (array, &cursor);
+      up (array);
     }
     else if (c=='d')
     {
-      down (array, &cursor);
+      down (array);
     }
     else if (c=='l')
     {
-      left (array, &cursor);
+      left (array);
     }
     else if (c=='r')
     {
-      right (array, &cursor);
+      right (array);
     }
     else
     {
-      printf ("The character '%c' is not recognized.\n", c);
+      if (false == move_digit (array, c))
+      {
+        printf ("The character '%c' is not recognized.\n", c);
+      }
     }
     getchar();
     print (array);
@@ -124,4 +213,3 @@ int main (int argc, char **argv)
   printf ("Good job.\n");
   return EXIT_SUCCESS;
 }
-
