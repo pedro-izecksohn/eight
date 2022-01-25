@@ -175,7 +175,7 @@ int main (int argc, char **argv)
   }
   printf ("Your problem is:\n");
   print (array);
-  while (!is_perfect(array))
+  while (false == is_perfect(array))
   {
     if (false == is_array_valid (array))
     {
